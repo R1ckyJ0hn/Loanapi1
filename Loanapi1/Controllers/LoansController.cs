@@ -69,42 +69,42 @@ namespace Loanapi1.Controllers
             }
         }
 
-        [HttpGet("All")]
-        public ActionResult<IEnumerable<Loanapplication>> GetLoanapplications(int page = 1, int pageSize = 10)
-        {
-            var loanApplications = new List<Loanapplication>();
+        //[HttpGet("All")]
+        //public ActionResult<IEnumerable<Loanapplication>> GetLoanapplications(int page = 1, int pageSize = 10)
+        //{
+        //    var loanApplications = new List<Loanapplication>();
 
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                var query = "SELECT ApplicationID, Name, Amount, Loantype FROM loanapplications " +
-                            "ORDER BY ApplicationID OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+        //    using (var connection = new SqlConnection(_connectionString))
+        //    {
+        //        connection.Open();
+        //        var query = "SELECT ApplicationID, Name, Amount, Loantype FROM loanapplications " +
+        //                    "ORDER BY ApplicationID OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
-                using (var command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@Offset", (page - 1) * pageSize);
-                    command.Parameters.AddWithValue("@PageSize", pageSize);
+        //        using (var command = new SqlCommand(query, connection))
+        //        {
+        //            command.Parameters.AddWithValue("@Offset", (page - 1) * pageSize);
+        //            command.Parameters.AddWithValue("@PageSize", pageSize);
 
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var loanApplication = new Loanapplication
-                            {
-                                ApplicationID = Convert.ToInt32(reader["ApplicationID"]),
-                                Name = reader["Name"].ToString(),
-                                Amount = Convert.ToInt32(reader["Amount"]),
-                                Loantype = Enum.Parse<loantypes>(reader["Loantype"].ToString()),
-                            };
+        //            using (var reader = command.ExecuteReader())
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    var loanApplication = new Loanapplication
+        //                    {
+        //                        ApplicationID = Convert.ToInt32(reader["ApplicationID"]),
+        //                        Name = reader["Name"].ToString(),
+        //                        Amount = Convert.ToInt32(reader["Amount"]),
+        //                        Loantype = Enum.Parse<loantypes>(reader["Loantype"].ToString()),
+        //                    };
 
-                            loanApplications.Add(loanApplication);
-                        }
-                    }
-                }
-            }
+        //                    loanApplications.Add(loanApplication);
+        //                }
+        //            }
+        //        }
+        //    }
 
-            return Ok(loanApplications);
-        }
+        //    return Ok(loanApplications);
+        //}
 
 
         [HttpPost]
