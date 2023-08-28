@@ -7,6 +7,9 @@ using Loanapi1.Models.Authentication.Login;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Loanapi1.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace Loanapi1.Controllers
 {
@@ -17,15 +20,21 @@ namespace Loanapi1.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
-        public AdminController(UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,IConfiguration configuration)
+        private readonly Loanscontext _loanscontext;
+        private readonly string _connectionString;
+
+        public AdminController(UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,IConfiguration configuration , Loanscontext loanscontext)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
+            _loanscontext = loanscontext;
+            _connectionString = "Data Source=DESKTOP-NE6M66C;Initial Catalog=LoanUsers1;user id =sa;password=P@ssw0rd;Trusted_Connection=True;Integrated Security=True;Encrypt=False;";
+
 
         }
         [HttpPost]
-        [Route("login")]
+        [Route("/login")]
         public async Task<IActionResult> Login([FromBody] Login model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
@@ -52,7 +61,7 @@ namespace Loanapi1.Controllers
                     expiration = token.ValidTo
                 });
             }
-            return Unauthorized();
+            return NotFound(new Response { Status = "Login Failed", Message = "Please re-enter correct credentials" });
         }
         [Authorize(Roles =UserRoles.Admin)]
         [HttpPost]
@@ -127,6 +136,34 @@ namespace Loanapi1.Controllers
                 );
 
             return token;
+        }
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpPost("loantype")]
+        public async Task<ActionResult> newloantype([FromBody] Loantypes loantypes)
+        {
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                var query = @"INSERT INTO types
+                      VALUES (@loantype)";
+
+                using (var command = new SqlCommand(query, connection))
+                {
+
+                    command.Parameters.AddWithValue("@loantype", loantypes.loantype);
+                    try
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"An error occured{ex.ToString()}");
+                    }
+
+                }
+            }
+            return Ok(new Response { Status = "Success", Message = "Added new loan Type" });
         }
     }
 }

@@ -1,12 +1,14 @@
-﻿namespace Loanapi1.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Loanapi1.Models
 {
-    public enum loantypes
+    public class Loantypes
     {
-        Carloan=1,
-        Homeloan=2,
-        Vehicleloan=3,
-        Educationalloan=4,
-        Personalloan=5
+        [Key]
+        [JsonIgnore]
+        public int TypeId { get; set; }
+        public string? loantype { get; set; }
 
     }
 }

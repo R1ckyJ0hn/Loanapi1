@@ -12,11 +12,16 @@ namespace Loanapi1.Models
         public Loanscontext(DbContextOptions<Loanscontext> options) : base(options)
         {
            
-
         }
-        
-       
-        public  DbSet<Loanapplication> Loans { get; set; } 
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    //modelBuilder.Entity<Loantypes>().HasNoKey();
+        //    //modelBuilder.Entity<IdentityUserLogin<string>>().HasNoKey();
+        //    //modelBuilder.Entity<IdentityUserRole<string>>().HasNoKey();
+        //    //modelBuilder.Entity<IdentityUserToken<string>>().HasNoKey();
+        //}
+        public  DbSet<Loanapplication> Loans { get; set; }
+        public DbSet<Loantypes> types { get; set; }
     }
 
 }

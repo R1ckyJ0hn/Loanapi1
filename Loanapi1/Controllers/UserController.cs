@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
+using Loanapi1.Models.Authentication.Login;
 
 namespace Loanapi1.Controllers
 {
@@ -27,40 +28,63 @@ namespace Loanapi1.Controllers
         public UserController(Loanscontext context)
         {
             _context = context;
-            _connectionString = "Data Source=DESKTOP-NE6M66C;Initial Catalog=LoanUsers;user id =sa;password=P@ssw0rd;Trusted_Connection=True;Integrated Security=True;Encrypt=False;";
+            _connectionString = "Data Source=DESKTOP-NE6M66C;Initial Catalog=LoanUsers1;user id =sa;password=P@ssw0rd;Trusted_Connection=True;Integrated Security=True;Encrypt=False;";
         }
         [HttpPost("newapplication")]
         public async Task<ActionResult> PostLoanapplication([FromBody] Loanapplication loanApplication)
         {
-
             if (string.IsNullOrEmpty(loanApplication.Loanstatus))
             {
                 loanApplication.Loanstatus = "Pending";
             }
-
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var query = @"INSERT INTO loanapplications (Name, Amount, Loantype, Loanstatus)
-                      VALUES (@Name, @Amount, @Loantype, @Loanstatus)";
-
+                var query = "select * from types where loantype=@loantype";
                 using (var command = new SqlCommand(query, connection))
                 {
+                    command.Parameters.AddWithValue("@loantype", loanApplication.Loantype);
+                    var iffound = command.ExecuteScalar();
+                    if (iffound!=null)
+                    {
+                        int createdApplicationId = 0;
 
-                    command.Parameters.AddWithValue("@Name", loanApplication.Name);
-                    command.Parameters.AddWithValue("@Amount", loanApplication.Amount);
-                    command.Parameters.AddWithValue("@Loantype", loanApplication.Loantype);
-                    command.Parameters.AddWithValue("@Loanstatus", loanApplication.Loanstatus);
+                        using (var connection1 = new SqlConnection(_connectionString))
+                        {
+                            connection1.Open();
+                            var query1 = @"INSERT INTO Loans (Name, Amount, Loantype, Loanstatus)
+                                             VALUES (@Name, @Amount, @Loannewtype, @Loanstatus);
+                                             SELECT SCOPE_IDENTITY();";
+
+                            using (var command1 = new SqlCommand(query1, connection1))
+                            {
+                                command.Parameters.AddWithValue("@Name", loanApplication.Name);
+                                command.Parameters.AddWithValue("@Amount", loanApplication.Amount);
+                                command.Parameters.AddWithValue("@Loannewtype", loanApplication.Loantype);
+                                command.Parameters.AddWithValue("@Loanstatus", loanApplication.Loanstatus);
 
 
-                    await command.ExecuteNonQueryAsync();
+                                createdApplicationId = Convert.ToInt32(await command.ExecuteScalarAsync());
+                                
+                            }
+                        }
+
+                        return Ok(new Response
+                        {
+                            Status = "Success",
+                            Message = $"Applied and your application ID is {createdApplicationId}.Please do not share your applicationID"
+                        });
+
+                    }
+                    return NotFound(new Response { Status="Error" ,Message= " Enter a valid loan type"}); 
+
                 }
+
             }
 
-
-
-            return CreatedAtAction("GetLoanapplications", loanApplication);
+            
         }
+
 
         [HttpGet("checkstatus")]
         public IActionResult GetLoanApplicationById(int id)
@@ -70,7 +94,7 @@ namespace Loanapi1.Controllers
             {
                 connection.Open();
 
-                var query = "SELECT ApplicationID, Name, Amount, Loantype, Loanstatus FROM loanapplications WHERE ApplicationID = @ApplicationID";
+                var query = "SELECT ApplicationID, Name, Amount, Loantype, Loanstatus FROM Loans WHERE ApplicationID = @ApplicationID";
                 using (var command = new SqlCommand(query, connection))
                 {
 
@@ -87,7 +111,7 @@ namespace Loanapi1.Controllers
                                 Name = reader["Name"].ToString(),
                                 Amount = Convert.ToInt32(reader["Amount"]),
                                 Loanstatus = reader["Loanstatus"].ToString(),
-                                Loantype = (loantypes)Enum.Parse(typeof(loantypes), reader["Loantype"].ToString(), true)
+                                Loantype = reader["Loantype"].ToString(),
                             };
 
                             return Ok(loanApplication);
@@ -100,6 +124,37 @@ namespace Loanapi1.Controllers
                 }
             }
         }
+        [HttpGet("loantypes")]
+        public async Task<ActionResult<IEnumerable<Loantypes>>> GetLoantypes()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                var query = "SELECT * FROM types";
+
+                using (var command = new SqlCommand(query, connection))
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    var loantypesList = new List<Loantypes>();
+
+                    while (await reader.ReadAsync())
+                    {
+                        var loantypes = new Loantypes
+                        {
+                            TypeId = reader.GetInt32(reader.GetOrdinal("TypeId")),
+                            loantype = reader.GetString(reader.GetOrdinal("loantype"))
+                        };
+
+                        loantypesList.Add(loantypes);
+                    }
+
+                    return Ok(loantypesList);
+                }
+            }
+        }
+
+
 
         //[HttpGet("All")]
         //public ActionResult<IEnumerable<Loanapplication>> GetLoanapplications(int page = 1, int pageSize = 10)
@@ -139,7 +194,7 @@ namespace Loanapi1.Controllers
         //}
 
 
-        
+
 
 
 
@@ -213,5 +268,5 @@ namespace Loanapi1.Controllers
         //        }
 
     }
-}
+    }
 

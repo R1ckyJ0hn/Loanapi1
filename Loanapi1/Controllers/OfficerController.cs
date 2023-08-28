@@ -27,7 +27,7 @@ namespace Loanapi1.Controllers
             _configuration = configuration;
             _userManager = userManager;
             _context = context;
-            _connectionString = "Data Source=DESKTOP-NE6M66C;Initial Catalog=LoanUsers;user id =sa;password=P@ssw0rd;Trusted_Connection=True;Integrated Security=True;Encrypt=False;";
+            _connectionString = "Data Source=DESKTOP-NE6M66C;Initial Catalog=LoanUsers1;user id =sa;password=P@ssw0rd;Trusted_Connection=True;Integrated Security=True;Encrypt=False;";
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Login model)
@@ -73,7 +73,7 @@ namespace Loanapi1.Controllers
             return token;
         }
         [Authorize(Roles = UserRoles.Loanofficer)]
-        [HttpGet("all")]
+        [HttpGet]
         public ActionResult<IEnumerable<Loanapplication>> GetLoanapplications(int page = 1, int pageSize = 10)
         {
             var loanApplications = new List<Loanapplication>();
@@ -81,7 +81,7 @@ namespace Loanapi1.Controllers
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var query = "SELECT ApplicationID, Name, Amount, Loantype FROM loanapplications " +
+                var query = "SELECT ApplicationID, Name, Amount, Loantype FROM Loans " +
                             "ORDER BY ApplicationID OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
                 using (var command = new SqlCommand(query, connection))
@@ -98,7 +98,7 @@ namespace Loanapi1.Controllers
                                 ApplicationID = Convert.ToInt32(reader["ApplicationID"]),
                                 Name = reader["Name"].ToString(),
                                 Amount = Convert.ToInt32(reader["Amount"]),
-                                Loantype = Enum.Parse<loantypes>(reader["Loantype"].ToString()),
+                                Loantype = reader["Loantype"].ToString(),
                             };
 
                             loanApplications.Add(loanApplication);
@@ -118,7 +118,7 @@ namespace Loanapi1.Controllers
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var query = "SELECT ApplicationID, Name, Amount, Loantype, Loanstatus FROM loanapplications WHERE Loanstatus = '" + loanstate + "'";
+                var query = "SELECT ApplicationID, Name, Amount, Loantype, Loanstatus FROM Loans WHERE Loanstatus = '" + loanstate + "'";
 
                 using (var command = new SqlCommand(query, connection))
                 {
@@ -132,7 +132,7 @@ namespace Loanapi1.Controllers
                                 Name = reader["Name"].ToString(),
                                 Amount = Convert.ToInt32(reader["Amount"]),
                                 Loanstatus = reader["Loanstatus"].ToString(),
-                                Loantype = (loantypes)Enum.Parse(typeof(loantypes), reader["Loantype"].ToString(), true),
+                                Loantype =  reader["Loantype"].ToString(),
                             };
 
                             pendingLoanApplications.Add(loanApplication);
@@ -150,7 +150,10 @@ namespace Loanapi1.Controllers
 
             if (string.IsNullOrEmpty(newLoanStatus) || (newLoanStatus != "Approved" && newLoanStatus != "Rejected"))
             {
+                Console.WriteLine("Invalid Status provided");
                 return BadRequest("Invalid loan status. Please provide 'Approved' or 'Rejected'.");
+
+                
             }
 
 
@@ -158,7 +161,7 @@ namespace Loanapi1.Controllers
             {
                 connection.Open();
 
-                var updateQuery = "UPDATE loanapplications SET Loanstatus = @Loanstatus WHERE ApplicationID = @ApplicationID";
+                var updateQuery = "UPDATE Loans SET Loanstatus = @Loanstatus WHERE ApplicationID = @ApplicationID";
                 using (var command = new SqlCommand(updateQuery, connection))
                 {
                     

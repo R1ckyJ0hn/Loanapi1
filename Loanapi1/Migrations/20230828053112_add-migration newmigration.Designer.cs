@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Loanapi1.Migrations
 {
     [DbContext(typeof(Loanscontext))]
-    [Migration("20230821090506_Initial")]
-    partial class Initial
+    [Migration("20230828053112_add-migration newmigration")]
+    partial class addmigrationnewmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,8 +40,8 @@ namespace Loanapi1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("Loantype")
-                        .HasColumnType("int");
+                    b.Property<string>("Loantype")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -49,6 +49,22 @@ namespace Loanapi1.Migrations
                     b.HasKey("ApplicationID");
 
                     b.ToTable("Loans");
+                });
+
+            modelBuilder.Entity("Loanapi1.Models.Loantypes", b =>
+                {
+                    b.Property<int>("TypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TypeId"));
+
+                    b.Property<string>("loantype")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TypeId");
+
+                    b.ToTable("types");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

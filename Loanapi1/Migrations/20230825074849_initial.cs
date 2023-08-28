@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Loanapi1.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,19 +51,32 @@ namespace Loanapi1.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Loanapplication",
+                name: "Loans",
                 columns: table => new
                 {
                     ApplicationID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Amount = table.Column<int>(type: "int", nullable: false),
-                    Loantype = table.Column<int>(type: "int", nullable: true),
+                    Loantype = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Loanstatus = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Loans", x => x.ApplicationID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "types",
+                columns: table => new
+                {
+                    TypeId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    loantype = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_types", x => x.TypeId);
                 });
 
             migrationBuilder.CreateTable(
@@ -232,6 +245,9 @@ namespace Loanapi1.Migrations
 
             migrationBuilder.DropTable(
                 name: "Loans");
+
+            migrationBuilder.DropTable(
+                name: "types");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
